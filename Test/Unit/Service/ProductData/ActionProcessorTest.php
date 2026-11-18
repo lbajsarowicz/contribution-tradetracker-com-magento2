@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Test\Unit\Service\ProductData;
 
-use Magento\Framework\Filter\FilterManager;
 use PHPUnit\Framework\Attributes\DataProvider;
 use TradeTracker\Connect\Service\ProductData\ActionProcessor;
 use PHPUnit\Framework\TestCase;
@@ -30,6 +29,9 @@ class ActionProcessorTest extends TestCase
         $this->processor = new ActionProcessor(new FilterManagerStub());
     }
 
+    /**
+     * @dataProvider valueActions
+     */
     #[DataProvider('valueActions')]
     public function testAValueActionFormatsTheValue(string $action, string $value, string $expected): void
     {
@@ -225,6 +227,8 @@ class ActionProcessorTest extends TestCase
     /**
      * The attribute stores "1"/"0"; the specification wants JSON true/false, and reads an omitted
      * flag as its default. "0" in the feed would be neither.
+     *
+     * @dataProvider flagValues
      */
     #[DataProvider('flagValues')]
     public function testTheEligibilityFlagsAreBooleans(?string $stored, ?bool $expected): void
@@ -382,6 +386,9 @@ class ActionProcessorTest extends TestCase
         );
     }
 
+    /**
+     * @dataProvider identifierCases
+     */
     #[DataProvider('identifierCases')]
     public function testIdentifierExistsSaysNoWhenTheChannelCannotIdentifyTheProduct(
         array $row,
@@ -433,6 +440,9 @@ class ActionProcessorTest extends TestCase
         self::assertSame('14.99 EUR', $row['sale_price']);
     }
 
+    /**
+     * @dataProvider preparedAttributes
+     */
     #[DataProvider('preparedAttributes')]
     public function testAnAttributeIsPreparedForItsFeedField(
         string $attribute,
@@ -463,21 +473,4 @@ class ActionProcessorTest extends TestCase
         ['code' => 'NL', 'service' => 'Standard', 'price' => 4.95, 'price_from' => 0, 'price_to' => 49.99],
         ['code' => 'NL', 'service' => 'Free', 'price' => 0, 'price_from' => 50, 'price_to' => 999],
     ];
-}
-
-/**
- * Magento's FilterManager dispatches every filter through __call, so neither a mock nor a stub can
- * be configured for removeTags(): the method does not exist to be configured. This declares it,
- * and does what the real filter does for the one call the processor makes.
- */
-class FilterManagerStub extends FilterManager
-{
-    public function __construct()
-    {
-    }
-
-    public function removeTags(string $value): string
-    {
-        return strip_tags($value);
-    }
 }
